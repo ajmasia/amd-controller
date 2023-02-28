@@ -8,8 +8,16 @@ pkgs.stdenv.mkDerivation rec {
     GREEN='\033[0;32m'  # Green
     YELLOW='\033[0;33m' # Yellow
 
-    CPU=$(${pkgs.coreutils}/bin/cat /proc/cpuinfo | grep name | uniq | cut -d ':' -f2 | sed -r "s/^\s+//g")
-    AC_STATUS=$(${pkgs.coreutils}/bin/cat /sys/class/power_supply/AC0/online)
+    CPU=$(${pkgs.coreutils}/bin/cat /proc/cpuinfo | ${pkgs.gnugrep}/bin/grep name | uniq | cut -d ':' -f2 | ${pkgs.gnused}/bin/sed -r "s/^\s+//g")
+    BAT=0
+    AC_STATUS=0
+    DESKTOP=1 
+
+    if [ -d "/sys/class/power_supply/BAT0" ]; then
+      BAT=1 
+      DESKTOP=0
+      AC_STATUS=$(${pkgs.coreutils}/bin/cat /sys/class/power_supply/AC0/online)
+    fi
 
     if [ ! -f /etc/amd-controller/config.json ]; then
       echo "Error: Configuration file not found at /etc/amd-controller/config.json."
@@ -66,97 +74,90 @@ pkgs.stdenv.mkDerivation rec {
       echo "Review params for other AMD processors here: https://shorturl.at/jHJ35"
     }
 
-    check_dependences() {
-      if ! command -v ryzenadj &>/dev/null 2>&1; then
-        printf >&2 "''${RED}Error: ryzenadj could not be found\n"
-        exit 1
-      elif ! command -v sudo &>/dev/null 2>&1; then
-        printf >&2 "''${RED}Error: sudo could not be found\n"
-        exit 1
-      fi
-    }
-
     set_slow_profile() {
-      if [[ $AC_STATUS == "1" ]]; then
-        sudo ryzenadj $SLOW_WITH_AC &>/dev/null
+      if [[ ($BAT == "1" && $AC_STATUS == "1") || $DESKTOP == "1" ]]; then
+        ${pkgs.ryzenadj}/bin/ryzenadj $SLOW_WITH_AC &>/var/log/power.log
       else
-        sudo ryzenadj $SLOW_WITH_BATTERY &>/dev/null
+        ${pkgs.ryzenadj}/bin/ryzenadj $SLOW_WITH_BATTERY &>/var/log/power.log
       fi
 
       printf "''${GREEN}🛠  SLOW profile set successfully for $CPU processor\n"
     }
 
     set_medium_profile() {
-      if [[ $AC_STATUS == "1" ]]; then
-        sudo ryzenadj $MEDIUM_WITH_AC &>/dev/null
+      if [[ ($BAT == "1" && $AC_STATUS == "1") || $DESKTOP == "1" ]]; then
+        ${pkgs.ryzenadj}/bin/ryzenadj $MEDIUM_WITH_AC &>/dev/null
       else
-        sudo ryzenadj $MEDIUM_WITH_BATTERY &>/dev/null
+        ${pkgs.ryzenadj}/bin/ryzenadj $MEDIUM_WITH_BATTERY &>/dev/null
       fi
 
       printf "''${GREEN}🛠  MEDIUM profile set successfully for $CPU processor\n"
     }
 
     set_high_profile() {
-      if [[ $AC_STATUS == "1" ]]; then
-        sudo ryzenadj $HIGH_WITH_AC &>/dev/null
+      if [[ ($BAT == "1" && $AC_STATUS == "1") || $DESKTOP == "1" ]]; then
+        ${pkgs.ryzenadj}/bin/ryzenadj $HIGH_WITH_AC &>/dev/null
       else
-        sudo ryzenadj $HIGH_WITH_BATTERY &>/dev/null
+        ${pkgs.ryzenadj}/bin/ryzenadj $HIGH_WITH_BATTERY &>/dev/null
       fi
 
       printf "''${GREEN}🛠  HIGH profile set successfully for $CPU processor\n"
     }
 
     set_fire_profile() {
-      if [[ $AC_STATUS == "1" ]]; then
-        sudo ryzenadj $FIRE_WITH_AC &>/dev/null
+      if [[ ($BAT == "1" && $AC_STATUS == "1") || $DESKTOP == "1" ]]; then
+        ${pkgs.ryzenadj}/bin/ryzenadj $FIRE_WITH_AC &>/dev/null
       else
-        sudo ryzenadj $FIRE_WITH_BATTERY &>/dev/null
+        ${pkgs.ryzenadj}/bin/ryzenadj $FIRE_WITH_BATTERY &>/dev/null
       fi
 
       printf "''${GREEN}🛠  FIRE profile set successfully for $CPU processor\n"
     }
 
     set_silent_profile() {
-      if [[ $AC_STATUS == "1" ]]; then
-        sudo ryzenadj $SILENT_WITH_AC &>/dev/null
+      if [[ ($BAT == "1" && $AC_STATUS == "1") || $DESKTOP == "1" ]]; then
+        ${pkgs.ryzenadj}/bin/ryzenadj $SILENT_WITH_AC &>/dev/null
       else
-        sudo ryzenadj $SILENT_WITH_BATTERY  &>/dev/null
+        ${pkgs.ryzenadj}/bin/ryzenadj $SILENT_WITH_BATTERY  &>/dev/null
       fi
 
       printf "''${GREEN}🛠 SILENT profile set successfully for $CPU processor\n"
     }
 
     set_balance_profile() {
-      if [[ $AC_STATUS == "1" ]]; then
-        sudo ryzenadj $BALANCE_WITH_AC &>/dev/null
+      if [[ ($BAT == "1" && $AC_STATUS == "1") || $DESKTOP == "1" ]]; then
+        ${pkgs.ryzenadj}/bin/ryzenadj $BALANCE_WITH_AC &>/dev/null
       else
-        sudo ryzenadj $BALANCE_WITH_BATTERY &>/dev/null
+        ${pkgs.ryzenadj}/bin/ryzenadj $BALANCE_WITH_BATTERY &>/dev/null
       fi
 
       printf "''${GREEN}🛠 BALANCE profile set successfully for $CPU processor\n"
     }
 
     set_power_saving_profile() {
-      sudo ryzenadj --power-saving
+      ${pkgs.ryzenadj}/bin/ryzenadj --power-saving
 
       printf "''${GREEN}🛠 POWER SAVING profile set successfullys for $CPU processor\n"
     }
 
     set_max_performance_profile() {
-      sudo ryzenadj --max-performance
+      ${pkgs.ryzenadj}/bin/ryzenadj --max-performance
 
       printf "''${GREEN}🛠 MAX PEPERFORMANCE profile set successfullys for $CPU processor\n"
     }
 
 
     show_processor_profile_info() {
-      STAPM_LIMIT=$(sudo ryzenadj -i | grep "STAPM LIMIT" | awk '{print $5}')
-      PPT_LIMIT_FAST=$(sudo ryzenadj -i | grep "PPT LIMIT FAST" | awk '{print $6}')
-      PPT_LIMIT_SLOW=$(sudo ryzenadj -i | grep "PPT LIMIT SLOW" | awk '{print $6}')
-      CCLK_BOOST_SETPOINT=$(sudo ryzenadj -i | grep "CCLK Boost SETPOINT" | awk '{print $6}')
-      CCLK_BUSY_VALUE=$(sudo ryzenadj -i | grep "CCLK BUSY VALUE" | awk '{print $6}')
+      STAPM_LIMIT=$(${pkgs.ryzenadj}/bin/ryzenadj -i | ${pkgs.gnugrep}/bin/grep "STAPM LIMIT" | ${pkgs.gawk}/bin/awk '{print $5}')
+      PPT_LIMIT_FAST=$(${pkgs.ryzenadj}/bin/ryzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT FAST" | ${pkgs.gawk}/bin/awk '{print $6}')
+      PPT_LIMIT_SLOW=$(${pkgs.ryzenadj}/bin/ryzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT SLOW" | ${pkgs.gawk}/bin/awk '{print $6}')
+      CCLK_BOOST_SETPOINT=$(${pkgs.ryzenadj}/bin/ryzenadj -i | ${pkgs.gnugrep}/bin/grep "CCLK Boost SETPOINT" | ${pkgs.gawk}/bin/awk '{print $6}')
+      CCLK_BUSY_VALUE=$(${pkgs.ryzenadj}/bin/ryzenadj -i | ${pkgs.gnugrep}/bin/grep "CCLK BUSY VALUE" | ${pkgs.gawk}/bin/awk '{print $6}')
 
-      printf " ''${GREEN}''${CPU} currrent profile info''${COLOR_OFF}\n\n"
+      printf " ''${GREEN}''${CPU} currrent profile info''${COLOR_OFF}\n"
+      printf "BAT present: ''${YELLOW}$([[ $BAT == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n" 
+      printf "AC present: ''${YELLOW}$([[ $AC_STATUS == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n" 
+      printf "Desktop environtment: ''${YELLOW}$([[ $DESKTOP == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n\n" 
 
       printf "Param               | Description                     | Value  \n"
       echo "--------------------|---------------------------------|--------"
@@ -167,7 +168,7 @@ pkgs.stdenv.mkDerivation rec {
       printf "CCLK BUSY VALUE     | Max Performance tune value (mW) | ''${CCLK_BUSY_VALUE}\n\n"
 
       printf "''${YELLOW}STAPM (Skin Temperature Aware Power Management)''${COLOR_OFF}\n"
-      printf "Your device's STAPM configuration is set by the manufacturer and differs depending on the processor used and the form factor of the device\n\n"
+      printf "Your device's STAPM configuration is set by the manufacturer and differs depending on the processor u${pkgs.gnused}/bin/sed and the form factor of the device\n\n"
 
       printf "''${YELLOW}PPT (Package Power Tracking)''${COLOR_OFF}\n"
       printf "PPT is a measurement of power to the CPU Socket on the motherboard and not the CPU itself\n\n"
@@ -178,8 +179,6 @@ pkgs.stdenv.mkDerivation rec {
 
       printf "''${GREEN}For more help, please type 'amd-controller -h, --help' ''${COLOR_OFF}\n\n"
     }
-
-    check_dependences
 
     case $1 in
     set)
