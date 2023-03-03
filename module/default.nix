@@ -6,11 +6,13 @@ let
   amdController = (pkgs.callPackage ../packages/amd-controller.nix { });
 
   awake = pkgs.writeShellScriptBin "awake" ''
-    ${amdController}/bin/amd-controller set -s &>/dev/null
+    ${amdController}/bin/amd-controller set -s
+    echo "$(date) - slow profile (power management service)" >> /var/log/power.log
   '';
 
   awake-udev = pkgs.writeShellScriptBin "awake-udev" ''
-    ${amdController}/bin/amd-controller set -s &>/dev/null
+    ${amdController}/bin/amd-controller set -s
+    echo "$(date) - slow profile (awake-udev)" >> /var/log/power.log
   '';
 
   processors = {

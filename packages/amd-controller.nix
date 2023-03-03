@@ -13,6 +13,12 @@ pkgs.stdenv.mkDerivation rec {
     AC_STATUS=0
     DESKTOP=1 
 
+    if [ "$EUID" -ne 0 ]; then
+      printf "''${YELLOW}Oops, something went wrong! You need admin privileges''${COLOR_OFF}\n"
+      printf "''${GREEN}Usage: sudo amd-controller [command <option>] [option]''${COLOR_OFF}\n"
+      exit
+    fi
+
     if [ -d "/sys/class/power_supply/BAT0" ]; then
       BAT=1 
       DESKTOP=0
@@ -46,7 +52,7 @@ pkgs.stdenv.mkDerivation rec {
 
     help() {
       printf "''${YELLOW}Slimbook ''${CPU} profile updater tool''${COLOR_OFF}\n\n"
-      printf "''${GREEN}Usage amd-controller [command <option>] [option]''${COLOR_OFF}\n\n"
+      printf "''${GREEN}Usage: sudo amd-controller [command <option>] [option]''${COLOR_OFF}\n\n"
 
       printf "''${YELLOW}Commands:''${COLOR_OFF}\n"
       echo "set <option>       Set processor profile"
@@ -146,7 +152,6 @@ pkgs.stdenv.mkDerivation rec {
       printf "''${GREEN}🛠 MAX PEPERFORMANCE profile set successfullys for $CPU processor\n"
     }
 
-
     show_processor_profile_info() {
       STAPM_LIMIT=$(${pkgs.ryzenadj}/bin/ryzenadj -i | ${pkgs.gnugrep}/bin/grep "STAPM LIMIT" | ${pkgs.gawk}/bin/awk '{print $5}')
       PPT_LIMIT_FAST=$(${pkgs.ryzenadj}/bin/ryzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT FAST" | ${pkgs.gawk}/bin/awk '{print $6}')
@@ -228,7 +233,6 @@ pkgs.stdenv.mkDerivation rec {
       ;;
     esac
     '';
-
 
     src = builtins.path { path = ./.; name = "sources"; };
 
