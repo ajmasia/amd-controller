@@ -6,25 +6,11 @@ let
   amdController = (pkgs.callPackage ../packages/amd-controller.nix { });
 
   awake = pkgs.writeShellScriptBin "awake" ''
-    # logger -s "awake - AC no present"
-
-    # if [ ! -f "/sys/class/power_supply/AC0/online" ]; then
-    # logger -s "awake - AC no present"
-    #   exit 1
-    # fi
-
-    ${amdController}/bin/amd-controller set -s
-    echo "$(date) - slow profile (power management service)" >> /var/log/power.log
+    ${amdController}/bin/amd-controller set -s &>/dev/null
   '';
 
   awake-udev = pkgs.writeShellScriptBin "awake-udev" ''
-    # if [ ! -f "/sys/class/power_supply/AC0/online" ]; then
-    #   exit 1
-    # fi
-
-    # sleep 1m # needed for override the BIOS default setup
-    ${amdController}/bin/amd-controller set -s
-    echo "$(date) - slow profile (awake-udev)" >> /var/log/power.log
+    ${amdController}/bin/amd-controller set -s &>/dev/null
   '';
 
   processors = {
@@ -80,7 +66,7 @@ in
 
       cpuFreqGovernor = "ondemand";
       powerUpCommands = "sleep 1m && ${awake}/bin/awake &";
-      resumeCommands = "${awake}/bin/awake";
+      resumeCommands = "sleep 1m && ${awake}/bin/awake &";
 
       powertop.enable = true;
     };

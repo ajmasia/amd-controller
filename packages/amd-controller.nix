@@ -76,9 +76,9 @@ pkgs.stdenv.mkDerivation rec {
 
     set_slow_profile() {
       if [[ ($BAT == "1" && $AC_STATUS == "1") || $DESKTOP == "1" ]]; then
-        ${pkgs.ryzenadj}/bin/ryzenadj $SLOW_WITH_AC &>/var/log/power.log
+        ${pkgs.ryzenadj}/bin/ryzenadj $SLOW_WITH_AC &>/dev/null
       else
-        ${pkgs.ryzenadj}/bin/ryzenadj $SLOW_WITH_BATTERY &>/var/log/power.log
+        ${pkgs.ryzenadj}/bin/ryzenadj $SLOW_WITH_BATTERY &>/dev/null
       fi
 
       printf "''${GREEN}🛠  SLOW profile set successfully for $CPU processor\n"
