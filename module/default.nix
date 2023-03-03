@@ -5,15 +5,7 @@ let
 
   amdController = (pkgs.callPackage ../packages/amd-controller.nix { });
 
-  awake = pkgs.writeShellScriptBin "awake" ''
-    ${amdController}/bin/amd-controller set -s
-    echo "$(date) - slow profile (power management service)" >> /var/log/power.log
-  '';
-
-  awake-udev = pkgs.writeShellScriptBin "awake-udev" ''
-    ${amdController}/bin/amd-controller set -s
-    echo "$(date) - slow profile (awake-udev)" >> /var/log/power.log
-  '';
+  awake = (import ./bin/scripts.nix { pkgs = pkgs; }).awake;
 
   processors = {
     "4800H" = import ./processors/4800H.nix;
@@ -34,6 +26,20 @@ in
     processor = mkOption {
       type = types.enum [ "4800H" "5900HX" ];
       description = "Select processor to apply specific tune values";
+    };
+
+    runAsAdmin.enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = mDoc ''
+        Run amd-controler with admin privileges
+      '';
+    };
+
+    runAsAdmin.user = mkOption {
+      type = types.str;
+      default = "";
+      description = "Define user for admin privileges";
     };
 
     udev.enable = mkOption {
@@ -73,11 +79,26 @@ in
       powertop.enable = true;
     };
 
+    security.sudo = lib.mkIf cfg.runAsAdmin.enable {
+      enable = true;
+
+      extraRules = [
+        {
+          users = [ "${cfg.runAsAdmin.user}" ];
+          commands = [
+            {
+              command = "${pkgs.ryzenadj}/bin/ryzenadj";
+              options = [ "NOPASSWD" ];
+            }
+          ];
+        }
+      ];
+    };
 
     services.udev.extraRules = lib.mkIf cfg.udev.enable ''
       # This config optimize the battery power
-      SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="1", RUN+="${awake-udev}/bin/awake-udev"
-      SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="0", RUN+="${awake-udev}/bin/awake-udev"
+      SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="1", RUN+="${awake}/bin/awake-udev"
+      SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="0", RUN+="${awake}/bin/awake-udev"
     '';
   };
 }
