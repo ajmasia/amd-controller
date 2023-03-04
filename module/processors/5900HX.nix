@@ -11,7 +11,7 @@
       medium = {
         actual = 15000;
         average = 11000;
-        surstained = 11000;
+        sustained = 11000;
       };
 
       high = {
@@ -37,7 +37,7 @@
       medium = {
         actual = 15000;
         average = 11000;
-        surstained = 11000;
+        sustained = 11000;
       };
 
       high = {

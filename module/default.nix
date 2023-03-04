@@ -5,7 +5,10 @@ let
 
   amdController = (pkgs.callPackage ../packages/amd-controller.nix { });
 
-  awake = (import ./bin/scripts.nix { pkgs = pkgs; }).awake;
+  awake = (import ./bin/scripts.nix {
+    pkgs = pkgs;
+    amdController = amdController;
+  }).awake;
 
   processors = {
     "4800H" = import ./processors/4800H.nix;

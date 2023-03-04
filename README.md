@@ -1,7 +1,7 @@
 <p align="center">
     <img src="./logo.png" alt="amd-controller" height="96">
   <h2 align="center">amd-controller</h2>
-  <p align="center">NixOS module for optimizing the performance of AMD Ryzen processors</p>
+  <p align="center">NixOS module for optimizing the AMD Ryzen processors performance</p>
 </p>
 
 
