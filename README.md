@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://www.clipartmax.com/png/middle/268-2687017_central-processing-unit-scalable-vector-graphics-icon-cpu-icon-png.png" alt="amd-controller" height="96">
+    <img src="./logo.png" alt="amd-controller" height="96">
   <h2 align="center">amd-controller</h2>
   <p align="center">NixOS module for optimizing the performance of AMD Ryzen processors</p>
 </p>
