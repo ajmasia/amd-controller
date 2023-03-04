@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.pngitem.com%2Fmiddle%2FToRJJbT_ryzen-controller-amd-ryzen-master-icon-hd-png%2F&psig=AOvVaw3zYsayfLuCTCixNHVsEqHy&ust=1677974390523000&source=images&cd=vfe&ved=0CBAQjRxqFwoTCMj01fH7wP0CFQAAAAAdAAAAABAD" alt="Developer Roadmap" width="96" height="96">
+    <img src="https://www.clipartmax.com/png/middle/268-2687017_central-processing-unit-scalable-vector-graphics-icon-cpu-icon-png.png" alt="amd-controller" height="96">
   <h2 align="center">amd-controller</h2>
   <p align="center">NixOS module for optimizing the performance of AMD Ryzen processors</p>
 </p>
