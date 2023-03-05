@@ -8,6 +8,7 @@ let
   awake = (import ./bin/scripts.nix {
     pkgs = pkgs;
     amdController = amdController;
+    awakeMode = cfg.powerManagement.awakeMode;
   }).awake;
 
   processors = {
@@ -45,19 +46,27 @@ in
       description = "Define user for admin privileges";
     };
 
-    udev.enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = mDoc ''
-        Enable management of udev rules for waking from suspension...
-      '';
-    };
-
     powerManagement.enable = mkOption {
       type = types.bool;
       default = false;
       description = mDoc ''
         Enable powerManagement to optimize the processor rules ...
+      '';
+    };
+
+    powerManagement.awakeMode = mkOption {
+      type = types.enum [ "slow" "medium" "high" ];
+      default = "slow";
+      description = mDoc ''
+        Define procesor tune level for awake fucntion
+      '';
+    };
+
+    udev.enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = mDoc ''
+        Enable management of udev rules for waking from suspension...
       '';
     };
   };
