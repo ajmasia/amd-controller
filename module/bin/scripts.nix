@@ -4,6 +4,6 @@
   awake = pkgs.writeShellScriptBin "awake" ''
 
     ${amdController}/bin/amd-controller set --${awakeMode}
-    echo "$(date) - slow profile (power management service)" >> /var/log/power.log
+    echo "$(date) - ${awakeMode} profile (power management service)" >> /var/log/power.log
   '';
 }

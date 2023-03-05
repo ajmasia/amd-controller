@@ -26,6 +26,7 @@ The module has the following configuration options:
 - `runAsAdmin.enable`, allows you to use the package without having to use sudo for a defined user.
 - `runAsAdmin.user`, name of the user to whom privileges are granted.
 - `powerManagement.enable`, enables the service of the same name and allows for automatic performance management using amd-controller. By default, this option will detect when the system has changed the processor operating configuration and will automatically revert it to the slow mode.
+- `powerManagement.awakeMode`, define the tune for processor when run automations
 - `udev.enable`, enables certain UDEV rules to detect changes, for example when an AC adapter is connected to a laptop and resets the processor configuration back to slow mode.
  
 ```nix
@@ -40,6 +41,7 @@ amd-controller = {
   };
   powerManagement = {
     enable = true;
+    awakeMode = "medium"
   };
   udev = {
     enable = true;
