@@ -85,8 +85,8 @@ in
       enable = true;
 
       cpuFreqGovernor = "ondemand";
-      powerUpCommands = "sleep 1m && ${awake}/bin/awake &";
-      resumeCommands = "sleep 1m && ${awake}/bin/awake &";
+      powerUpCommands = "sleep 30 && ${awake}/bin/awake &";
+      resumeCommands = "sleep 10 && ${awake}/bin/awake";
 
       powertop.enable = true;
     };

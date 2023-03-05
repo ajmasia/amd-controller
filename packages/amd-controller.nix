@@ -7,7 +7,7 @@ pkgs.stdenv.mkDerivation rec {
     COLOR_OFF='\033[0m' # Text Reset
     GREEN='\033[0;32m'  # Green
     YELLOW='\033[0;33m' # Yellow
-    CPU=$(${pkgs.coreutils}/bin/cat /proc/cpuinfo | ${pkgs.gnugrep}/bin/grep name | uniq | cut -d ':' -f2 | ${pkgs.gnused}/bin/sed -r "s/^\s+//g")
+    CPU=$(${pkgs.coreutils}/bin/cat /proc/cpuinfo | ${pkgs.gnugrep}/bin/grep name | ${pkgs.coreutils}/bin/uniq | ${pkgs.coreutils}/bin/cut -d ':' -f2 | ${pkgs.gnused}/bin/sed -r "s/^\s+//g")
     BAT=0
     AC_STATUS=0
     DESKTOP=1 
@@ -54,6 +54,54 @@ pkgs.stdenv.mkDerivation rec {
     BALANCE_WITH_AC="--tctl-temp=95 --slow-limit=60000 --stapm-limit=54000 --fast-limit=65000 --max-performance"
     BALANCE_WITH_BATTERY="--tctl-temp=95 --slow-limit=30000 --stapm-limit=30000 --fast-limit=35000 --power-saving"
 
+    get_current_tune_values() {
+      if [[ $1 == "parse" ]]; then
+        STAPM_LIMIT=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "STAPM LIMIT" | ${pkgs.gawk}/bin/awk '{print $5}' | ${pkgs.gnused}/bin/sed 's/\.\|,//g')
+        PPT_LIMIT_FAST=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT FAST" | ${pkgs.gawk}/bin/awk '{print $6}' | ${pkgs.gnused}/bin/sed 's/\.\|,//g')
+        PPT_LIMIT_SLOW=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT SLOW" | ${pkgs.gawk}/bin/awk '{print $6}' | ${pkgs.gnused}/bin/sed 's/\.\|,//g')
+        CCLK_BOOST_SETPOINT=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "CCLK Boost SETPOINT" | ${pkgs.gawk}/bin/awk '{print $6}' | ${pkgs.gnused}/bin/sed 's/\.\|,//g')
+        CCLK_BUSY_VALUE=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "CCLK BUSY VALUE" | ${pkgs.gawk}/bin/awk '{print $6}' | ${pkgs.gnused}/bin/sed 's/\.\|,//g')
+      else
+        STAPM_LIMIT=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "STAPM LIMIT" | ${pkgs.gawk}/bin/awk '{print $5}')
+        PPT_LIMIT_FAST=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT FAST" | ${pkgs.gawk}/bin/awk '{print $6}')
+        PPT_LIMIT_SLOW=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT SLOW" | ${pkgs.gawk}/bin/awk '{print $6}')
+        CCLK_BOOST_SETPOINT=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "CCLK Boost SETPOINT" | ${pkgs.gawk}/bin/awk '{print $6}')
+        CCLK_BUSY_VALUE=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "CCLK BUSY VALUE" | ${pkgs.gawk}/bin/awk '{print $6}')
+      fi
+    }
+
+    getCurrentProfile() {
+      get_current_tune_values parse
+
+      if [[ $STAPM_LIMIT == $(getPowerValue ac.slow.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue ac.slow.average) && $PPT_LIMIT_FAST == $(getPowerValue ac.slow.actual) ]]; then 
+        echo "slow"
+
+      elif [[ $STAPM_LIMIT == $(getPowerValue bat.slow.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue bat.slow.average) && $PPT_LIMIT_FAST == $(getPowerValue bat.slow.actual) ]]; then
+        echo "slow"
+
+      elif [[ $STAPM_LIMIT == $(getPowerValue ac.medium.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue ac.medium.average) && $PPT_LIMIT_FAST == $(getPowerValue ac.medium.actual) ]]; then
+        echo "medium"
+
+      elif [[ $STAPM_LIMIT == $(getPowerValue bat.medium.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue bat.medium.average) && $PPT_LIMIT_FAST == $(getPowerValue bat.medium.actual) ]]; then
+        echo "medium"
+
+      elif [[ $STAPM_LIMIT == $(getPowerValue ac.high.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue ac.high.average) && $PPT_LIMIT_FAST == $(getPowerValue ac.high.actual) ]]; then
+        echo "high"
+
+      elif [[ $STAPM_LIMIT == $(getPowerValue bat.high.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue bat.high.average) && $PPT_LIMIT_FAST == $(getPowerValue bat.high.actual) ]]; then
+        echo "high"
+
+      elif [[ $STAPM_LIMIT == $(getPowerValue ac.fire.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue ac.fire.average) && $PPT_LIMIT_FAST == $(getPowerValue ac.fire.actual) ]]; then
+        echo "fire"
+
+      elif [[ $STAPM_LIMIT == $(getPowerValue bat.fire.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue bat.fire.average) && $PPT_LIMIT_FAST == $(getPowerValue bat.fire.actual) ]]; then
+        echo "fire"
+
+      else 
+        echo "auto"
+      fi
+    }
+
     help() {
       printf "''${YELLOW}Slimbook ''${CPU} profile updater tool''${COLOR_OFF}\n\n"
       printf "''${GREEN}Usage: sudo amd-controller [command <option>] [option]''${COLOR_OFF}\n\n"
@@ -76,6 +124,7 @@ pkgs.stdenv.mkDerivation rec {
       printf "''${YELLOW}Flags:''${COLOR_OFF}\n"
       echo "-h, --help         Show CLI help"
       echo "-i, --info         Show processor profile info"
+      echo "-m, --mode         Show processor profile mode (use for third parts scripts)"
       echo
 
       printf "''${GREEN}Example: Type 'amd-controller set -s' to set your processor to work with a slow profile''${COLOR_OFF}\n"
@@ -95,9 +144,6 @@ pkgs.stdenv.mkDerivation rec {
     }
 
     set_medium_profile() {
-      echo $MEDIUM_WITH_AC
-      echo $MEDIUM_WITH_BATTERY
-
       if [[ ($BAT == "1" && $AC_STATUS == "1") || $DESKTOP == "1" ]]; then
         wrappedRyzenadj $MEDIUM_WITH_AC &>/dev/null
       else
@@ -160,16 +206,13 @@ pkgs.stdenv.mkDerivation rec {
     }
 
     show_processor_profile_info() {
-      STAPM_LIMIT=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "STAPM LIMIT" | ${pkgs.gawk}/bin/awk '{print $5}')
-      PPT_LIMIT_FAST=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT FAST" | ${pkgs.gawk}/bin/awk '{print $6}')
-      PPT_LIMIT_SLOW=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "PPT LIMIT SLOW" | ${pkgs.gawk}/bin/awk '{print $6}')
-      CCLK_BOOST_SETPOINT=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "CCLK Boost SETPOINT" | ${pkgs.gawk}/bin/awk '{print $6}')
-      CCLK_BUSY_VALUE=$(wrappedRyzenadj -i | ${pkgs.gnugrep}/bin/grep "CCLK BUSY VALUE" | ${pkgs.gawk}/bin/awk '{print $6}')
-
+      get_current_tune_values
+      
       printf " ''${GREEN}''${CPU} currrent profile info''${COLOR_OFF}\n"
       printf "BAT present: ''${YELLOW}$([[ $BAT == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n" 
       printf "AC present: ''${YELLOW}$([[ $AC_STATUS == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n" 
-      printf "Desktop environtment: ''${YELLOW}$([[ $DESKTOP == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n\n" 
+      printf "Desktop environtment: ''${YELLOW}$([[ $DESKTOP == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n" 
+      printf "Current mode: ''${YELLOW}$(getCurrentProfile | awk '{print toupper($0)}')''${COLOR_OFF}\n\n" 
 
       printf "Param               | Description                     | Value  \n"
       echo "--------------------|---------------------------------|--------"
@@ -195,9 +238,6 @@ pkgs.stdenv.mkDerivation rec {
     case $1 in
     set)
       case $2 in
-      -b | --base)
-        set_base_profile
-        ;;
       -s | --slow)
         set_slow_profile
         ;;
@@ -233,6 +273,9 @@ pkgs.stdenv.mkDerivation rec {
       ;;
     -h | --help)
       help
+      ;;
+    -p | --profile)
+      getCurrentProfile
       ;;
     *)
       printf "''${YELLOW}Invalid command or option\n''${COLOR_OFF}"
