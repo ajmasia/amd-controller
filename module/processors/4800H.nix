@@ -10,7 +10,7 @@
       medium = {
         actual = 35000;
         average = 30000;
-        surstained = 30000;
+        sustained = 30000;
       };
 
       high = {
@@ -36,7 +36,7 @@
       medium = {
         actual = 25000;
         average = 15000;
-        surstained = 15000;
+        sustained = 15000;
       };
 
       high = {
