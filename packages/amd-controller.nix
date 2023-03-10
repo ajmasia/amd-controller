@@ -124,7 +124,7 @@ pkgs.stdenv.mkDerivation rec {
       printf "''${YELLOW}Flags:''${COLOR_OFF}\n"
       echo "-h, --help         Show CLI help"
       echo "-i, --info         Show processor profile info"
-      echo "-p, --profile         Show processor profile mode (use for third parts scripts)"
+      echo "-p, --profile      Show processor profile mode (use for third parts scripts)"
       echo
 
       printf "''${GREEN}Example: Type 'amd-controller set -s' to set your processor to work with a slow profile''${COLOR_OFF}\n"
