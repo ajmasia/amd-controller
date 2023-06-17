@@ -4,9 +4,7 @@
   <p align="center">NixOS module for optimizing the AMD Ryzen processors performance</p>
 </p>
 
-
 Important note: This module allows you to modify certain parameters of your machine's CPU, so if you do not know what you are doing, you may end up causing irreversible damage to your computer. Please use it with caution and responsibility.
-
 
 ## Why this project
 
@@ -27,41 +25,51 @@ The module has the following configuration options:
 - `runAsAdmin.user`, name of the user to whom privileges are granted.
 - `powerManagement.enable`, enables the service of the same name and allows for automatic performance management using amd-controller. By default, this option will detect when the system has changed the processor operating configuration and will automatically revert it to the slow mode.
 - `powerManagement.awakeMode`, define the tune for processor when run automations
+- `powerUpCommandsDelay`, define the delay in seconds between each command when the system is booting. Default value `30`
+- `resumeComandsDelay`, define the delay in seconds between each command when the system is resuming. Default value `10`
+- `powertop.enable`, enables the service of the same name and allows for automatic performance management using powertop. Default value `true`
 - `udev.enable`, enables certain UDEV rules to detect changes, for example when an AC adapter is connected to a laptop and resets the processor configuration back to slow mode.
- 
+
 ```nix
 amd-controller = {
   enable = true;
   processor = "4800H";
-  
+
   # optionals
   runAsAdmin = {
     enable = true;
     user = "<user_name>";
   };
+
   powerManagement = {
     enable = true;
-    awakeMode = "medium"
+
+    awakeMode = "medium";
+    powerUpCommandsDelay = 60;
+    resumeComandsDelay = 20;
+    powertop.enable = false;
   };
+
   udev = {
     enable = true;
   };
 };
 ```
+
+> Please review [amd-controller changelog](./CHANGELOG.md) file to see new features and breaking changes.
+
 ## Technical information
 
 This module has RyzenAdj as its main dependency:
 
 - [FlyGoat/RyzenAdj: Adjust power management settings for Ryzen APUs](https://github.com/FlyGoat/RyzenAdj)
 
-
 ## Tested computers
+
 - [Slimbook PRO X : PRO X 14 AMD](https://slimbook.es/en/store/slimbook-pro-x/prox-amd5-comprar) con procesadores AMD 4800H
 - [Slimbook ONE EN - SLIMBOOK Ultrabook, laptops, computers](https://slimbook.es/en/one-en) con procesadores AMD 5900HX
 
 ## Contributors
+
 - [@juboba (Julio Borja Barra)](https://github.com/juboba)
 - [@ajmasia (Antonio José Masiá)](https://github.com/ajmasia)
-
-
-

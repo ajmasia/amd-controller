@@ -62,6 +62,30 @@ in
       '';
     };
 
+    powerManagement.powerUpCommandsDelay = mkOption {
+      type = types.int;
+      default = 30;
+      description = mDoc ''
+        Define the powerUpCommands delay in seconds
+      '';
+    };
+
+    powerManagement.resumeCommandsDelay = mkOption {
+      type = types.int;
+      default = 10;
+      description = mDoc ''
+        Define the resumeCommands delay in seconds
+      '';
+    };
+
+    powerManagement.powertop.enable = mkOption {
+      type = types.bool;
+      default = true;
+      description = mDoc ''
+        Enable powertop service
+      '';
+    };
+
     udev.enable = mkOption {
       type = types.bool;
       default = false;
@@ -85,10 +109,10 @@ in
       enable = true;
 
       cpuFreqGovernor = "ondemand";
-      powerUpCommands = "sleep 30 && ${awake}/bin/awake &";
-      resumeCommands = "sleep 10 && ${awake}/bin/awake";
+      powerUpCommands = "sleep ${toString cfg.powerManagement.powerUpCommandsDelay} && ${awake}/bin/awake &";
+      resumeCommands = "sleep ${toString cfg.powerManagement.resumeCommandsDelay} && ${awake}/bin/awake";
 
-      powertop.enable = true;
+      powertop.enable = cfg.powerManagement.powertop.enable;
     };
 
     security.sudo = lib.mkIf cfg.runAsAdmin.enable {
