@@ -86,6 +86,14 @@ in
       '';
     };
 
+    thermald.enable = mkOption {
+      type = types.bool;
+      default = false;
+      description = mDoc ''
+        Whether to enable thermald, the temperature management daemon.
+      '';
+    };
+
     udev.enable = mkOption {
       type = types.bool;
       default = false;
@@ -131,10 +139,14 @@ in
       ];
     };
 
-    services.udev.extraRules = lib.mkIf cfg.udev.enable ''
+    services = {
+      thermald.enable = cfg.thermald.enable;
+
+      udev.extraRules = lib.mkIf cfg.udev.enable ''
       # This config optimize the battery power
       SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="1", RUN+="${awake}/bin/awake"
       SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="0", RUN+="${awake}/bin/awake"
     '';
+    };
   };
 }
