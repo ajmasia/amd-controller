@@ -46,44 +46,55 @@ in
       description = "Define user for admin privileges";
     };
 
-    powerManagement.enable = mkOption {
-      type = types.bool;
-      default = false;
-      description = mDoc ''
+    powerManagement = {
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+        description = mDoc ''
         Enable powerManagement to optimize the processor rules ...
       '';
-    };
+      };
 
-    powerManagement.awakeMode = mkOption {
-      type = types.enum [ "slow" "medium" "high" ];
-      default = "slow";
-      description = mDoc ''
+      awakeMode = mkOption {
+        type = types.enum [ "slow" "medium" "high" ];
+        default = "slow";
+        description = mDoc ''
         Define procesor tune level for awake fucntion
       '';
-    };
+      };
 
-    powerManagement.powerUpCommandsDelay = mkOption {
-      type = types.int;
-      default = 30;
-      description = mDoc ''
+      powerUpCommandsDelay = mkOption {
+        type = types.int;
+        default = 30;
+        description = mDoc ''
         Define the powerUpCommands delay in seconds
       '';
-    };
+      };
 
-    powerManagement.resumeCommandsDelay = mkOption {
-      type = types.int;
-      default = 10;
-      description = mDoc ''
+      resumeCommandsDelay = mkOption {
+        type = types.int;
+        default = 10;
+        description = mDoc ''
         Define the resumeCommands delay in seconds
       '';
-    };
+      };
 
-    powerManagement.powertop.enable = mkOption {
-      type = types.bool;
-      default = true;
-      description = mDoc ''
+      cpuFreqGovernor = mkOption {
+        type = types.enum [ "ondemand" "performance" "powersave" ];
+        default = "ondemand";
+        description = mDoc ''
+        Configure the governor used to regulate the frequency of the available CPUs. By default, the kernel configures the performance governor,
+        although this may be overwritten in your hardware-configuration.nix file.
+      '';
+      };
+
+      powertop.enable = mkOption {
+        type = types.bool;
+        default = true;
+        description = mDoc ''
         Enable powertop service
       '';
+      };
     };
 
     thermald.enable = mkOption {
@@ -116,7 +127,7 @@ in
     powerManagement = lib.mkIf cfg.powerManagement.enable {
       enable = true;
 
-      cpuFreqGovernor = "ondemand";
+      cpuFreqGovernor = cfg.powerManagement.cpuFreqGovernor;
       powerUpCommands = "sleep ${toString cfg.powerManagement.powerUpCommandsDelay} && ${awake}/bin/awake &";
       resumeCommands = "sleep ${toString cfg.powerManagement.resumeCommandsDelay} && ${awake}/bin/awake";
 
