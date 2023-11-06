@@ -1,23 +1,26 @@
-{ config, lib, pkgs, ... }:
-
-let
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.amd-controller;
 
-  amdController = (pkgs.callPackage ../packages/amd-controller.nix { });
+  amdController = pkgs.callPackage ../packages/amd-controller.nix {};
 
-  awake = (import ./bin/scripts.nix {
-    pkgs = pkgs;
-    amdController = amdController;
-    awakeMode = cfg.powerManagement.awakeMode;
-  }).awake;
+  awake =
+    (import ./bin/scripts.nix {
+      pkgs = pkgs;
+      amdController = amdController;
+      awakeMode = cfg.powerManagement.awakeMode;
+    })
+    .awake;
 
   processors = {
     "4800H" = import ./processors/4800H.nix;
     "5900HX" = import ./processors/5900HX.nix;
   };
-
-in
-{
+in {
   options.amd-controller = with lib; {
     enable = mkOption {
       type = types.bool;
@@ -28,7 +31,7 @@ in
     };
 
     processor = mkOption {
-      type = types.enum [ "4800H" "5900HX" ];
+      type = types.enum ["4800H" "5900HX"];
       description = "Select processor to apply specific tune values";
     };
 
@@ -51,49 +54,49 @@ in
         type = types.bool;
         default = false;
         description = mDoc ''
-        Enable powerManagement to optimize the processor rules ...
-      '';
+          Enable powerManagement to optimize the processor rules ...
+        '';
       };
 
       awakeMode = mkOption {
-        type = types.enum [ "slow" "medium" "high" ];
+        type = types.enum ["slow" "medium" "high"];
         default = "slow";
         description = mDoc ''
-        Define procesor tune level for awake fucntion
-      '';
+          Define procesor tune level for awake fucntion
+        '';
       };
 
       powerUpCommandsDelay = mkOption {
         type = types.int;
         default = 30;
         description = mDoc ''
-        Define the powerUpCommands delay in seconds
-      '';
+          Define the powerUpCommands delay in seconds
+        '';
       };
 
       resumeCommandsDelay = mkOption {
         type = types.int;
         default = 10;
         description = mDoc ''
-        Define the resumeCommands delay in seconds
-      '';
+          Define the resumeCommands delay in seconds
+        '';
       };
 
       cpuFreqGovernor = mkOption {
-        type = types.enum [ "ondemand" "performance" "powersave" ];
+        type = types.enum ["ondemand" "performance" "powersave"];
         default = "ondemand";
         description = mDoc ''
-        Configure the governor used to regulate the frequency of the available CPUs. By default, the kernel configures the performance governor,
-        although this may be overwritten in your hardware-configuration.nix file.
-      '';
+          Configure the governor used to regulate the frequency of the available CPUs. By default, the kernel configures the performance governor,
+          although this may be overwritten in your hardware-configuration.nix file.
+        '';
       };
 
       powertop.enable = mkOption {
         type = types.bool;
         default = true;
         description = mDoc ''
-        Enable powertop service
-      '';
+          Enable powertop service
+        '';
       };
     };
 
@@ -109,7 +112,7 @@ in
       type = types.bool;
       default = false;
       description = mDoc ''
-        Enable management of udev rules for waking from suspension...
+        Enable management of udev rules when use laptop on BAT/AC
       '';
     };
   };
@@ -128,8 +131,8 @@ in
       enable = true;
 
       cpuFreqGovernor = cfg.powerManagement.cpuFreqGovernor;
-      powerUpCommands = "sleep ${toString cfg.powerManagement.powerUpCommandsDelay} && ${awake}/bin/awake &";
-      resumeCommands = "sleep ${toString cfg.powerManagement.resumeCommandsDelay} && ${awake}/bin/awake";
+      powerUpCommands = "sleep ${toString cfg.powerManagement.powerUpCommandsDelay} && ${awake}/bin/awake 'power management | power up' &";
+      resumeCommands = "sleep ${toString cfg.powerManagement.resumeCommandsDelay} && ${awake}/bin/awake 'power management | resume' &";
 
       powertop.enable = cfg.powerManagement.powertop.enable;
     };
@@ -139,11 +142,11 @@ in
 
       extraRules = [
         {
-          users = [ "${cfg.runAsAdmin.user}" ];
+          users = ["${cfg.runAsAdmin.user}"];
           commands = [
             {
               command = "${pkgs.ryzenadj}/bin/ryzenadj";
-              options = [ "NOPASSWD" ];
+              options = ["NOPASSWD"];
             }
           ];
         }
@@ -154,10 +157,10 @@ in
       thermald.enable = cfg.thermald.enable;
 
       udev.extraRules = lib.mkIf cfg.udev.enable ''
-      # This config optimize the battery power
-      SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="1", RUN+="${awake}/bin/awake"
-      SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="0", RUN+="${awake}/bin/awake"
-    '';
+        # This config optimize the battery power
+        SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="1", RUN+="${awake}/bin/awake 'udev AC'"
+        SUBSYSTEM=="power_supply", KERNEL=="AC0", DRIVER=="", ATTR{online}=="0", RUN+="${awake}/bin/awake 'udev BAT'"
+      '';
     };
   };
 }
