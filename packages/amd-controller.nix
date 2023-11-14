@@ -1,20 +1,24 @@
-{ config, lib, pkgs, ... }:
-
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 pkgs.stdenv.mkDerivation rec {
-    name = "amd-controller";
+  name = "amd-controller";
 
-    amd-controller = pkgs.writeShellScriptBin "amd-controller" ''
+  amd-controller = pkgs.writeShellScriptBin "amd-controller" ''
     COLOR_OFF='\033[0m' # Text Reset
     GREEN='\033[0;32m'  # Green
     YELLOW='\033[0;33m' # Yellow
     CPU=$(${pkgs.coreutils}/bin/cat /proc/cpuinfo | ${pkgs.gnugrep}/bin/grep name | ${pkgs.coreutils}/bin/uniq | ${pkgs.coreutils}/bin/cut -d ':' -f2 | ${pkgs.gnused}/bin/sed -r "s/^\s+//g")
     BAT=0
     AC_STATUS=0
-    DESKTOP=1 
+    DESKTOP=1
     USER=$USER
 
     if [ -d "/sys/class/power_supply/BAT0" ]; then
-      BAT=1 
+      BAT=1
       DESKTOP=0
       AC_STATUS=$(${pkgs.coreutils}/bin/cat /sys/class/power_supply/AC0/online)
     fi
@@ -73,7 +77,7 @@ pkgs.stdenv.mkDerivation rec {
     getCurrentProfile() {
       get_current_tune_values parse
 
-      if [[ $STAPM_LIMIT == $(getPowerValue ac.slow.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue ac.slow.average) && $PPT_LIMIT_FAST == $(getPowerValue ac.slow.actual) ]]; then 
+      if [[ $STAPM_LIMIT == $(getPowerValue ac.slow.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue ac.slow.average) && $PPT_LIMIT_FAST == $(getPowerValue ac.slow.actual) ]]; then
         echo "slow"
 
       elif [[ $STAPM_LIMIT == $(getPowerValue bat.slow.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue bat.slow.average) && $PPT_LIMIT_FAST == $(getPowerValue bat.slow.actual) ]]; then
@@ -97,7 +101,7 @@ pkgs.stdenv.mkDerivation rec {
       elif [[ $STAPM_LIMIT == $(getPowerValue bat.fire.sustained) && $PPT_LIMIT_SLOW == $(getPowerValue bat.fire.average) && $PPT_LIMIT_FAST == $(getPowerValue bat.fire.actual) ]]; then
         echo "fire"
 
-      else 
+      else
         echo "auto"
       fi
     }
@@ -115,8 +119,8 @@ pkgs.stdenv.mkDerivation rec {
       echo "-m, --medium            Set your processor to work with medium profile"
       echo "-h, --high              Set your processor to work with high profil"
       echo "-f, --fire              Set your processor to work with fire profil"
-      echo "-sl --silent            Set your processor to work with system silent profil"
-      echo "-bl --balance           Set your processor to work with system balance profil"
+      echo "-sl --silent            Set your processor to work with system silent profile "
+      echo "-bl --balance           Set your processor to work with system balance profile"
       echo "-ps, --power-saving     Tune your processor for power saving"
       echo "-mp, --max-performance  Tune your processor for max performance"
       echo
@@ -207,12 +211,12 @@ pkgs.stdenv.mkDerivation rec {
 
     show_processor_profile_info() {
       get_current_tune_values
-      
+
       printf " ''${GREEN}''${CPU} currrent profile info''${COLOR_OFF}\n"
-      printf "BAT present: ''${YELLOW}$([[ $BAT == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n" 
-      printf "AC present: ''${YELLOW}$([[ $AC_STATUS == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n" 
-      printf "Desktop environtment: ''${YELLOW}$([[ $DESKTOP == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n" 
-      printf "Current mode: ''${YELLOW}$(getCurrentProfile | awk '{print toupper($0)}')''${COLOR_OFF}\n\n" 
+      printf "BAT present: ''${YELLOW}$([[ $BAT == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n"
+      printf "AC present: ''${YELLOW}$([[ $AC_STATUS == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n"
+      printf "Desktop environtment: ''${YELLOW}$([[ $DESKTOP == 1 ]] && echo "YES" || echo "NO")''${COLOR_OFF}\n"
+      printf "Current mode: ''${YELLOW}$(getCurrentProfile | awk '{print toupper($0)}')''${COLOR_OFF}\n\n"
 
       printf "Param               | Description                     | Value  \n"
       echo "--------------------|---------------------------------|--------"
@@ -223,7 +227,7 @@ pkgs.stdenv.mkDerivation rec {
       printf "CCLK BUSY VALUE     | Max Performance tune value (mW) | ''${CCLK_BUSY_VALUE}\n\n"
 
       printf "''${YELLOW}STAPM (Skin Temperature Aware Power Management)''${COLOR_OFF}\n"
-      printf "Your device's STAPM configuration is set by the manufacturer and differs depending on the processor u${pkgs.gnused}/bin/sed and the form factor of the device\n\n"
+     printf "Your device's STAPM configuration is set by the manufacturer and differs depending on the processor used and the form factor of the device\n\n"
 
       printf "''${YELLOW}PPT (Package Power Tracking)''${COLOR_OFF}\n"
       printf "PPT is a measurement of power to the CPU Socket on the motherboard and not the CPU itself\n\n"
@@ -282,12 +286,15 @@ pkgs.stdenv.mkDerivation rec {
       help
       ;;
     esac
-    '';
+  '';
 
-    src = builtins.path { path = ./.; name = "sources"; };
+  src = builtins.path {
+    path = ./.;
+    name = "sources";
+  };
 
-    installPhase = ''
-      mkdir -p $out/bin
-      cp ${amd-controller}/bin/amd-controller /$out/bin
-    '';
-  }
+  installPhase = ''
+    mkdir -p $out/bin
+    cp ${amd-controller}/bin/amd-controller /$out/bin
+  '';
+}
