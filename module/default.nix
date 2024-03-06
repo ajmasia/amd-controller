@@ -1,26 +1,26 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}: let
+{ config
+, lib
+, pkgs
+, ...
+}:
+let
   cfg = config.amd-controller;
 
-  amdController = pkgs.callPackage ../packages/amd-controller.nix {};
+  amdController = pkgs.callPackage ../packages/amd-controller.nix { };
 
   awake =
     (import ./bin/scripts.nix {
       pkgs = pkgs;
       amdController = amdController;
       awakeMode = cfg.powerManagement.awakeMode;
-    })
-    .awake;
+    }).awake;
 
   processors = {
     "4800H" = import ./processors/4800H.nix;
     "5900HX" = import ./processors/5900HX.nix;
   };
-in {
+in
+{
   options.amd-controller = with lib; {
     enable = mkOption {
       type = types.bool;
@@ -31,7 +31,7 @@ in {
     };
 
     processor = mkOption {
-      type = types.enum ["4800H" "5900HX"];
+      type = types.enum [ "4800H" "5900HX" ];
       description = "Select processor to apply specific tune values";
     };
 
@@ -59,7 +59,7 @@ in {
       };
 
       awakeMode = mkOption {
-        type = types.enum ["slow" "medium" "high"];
+        type = types.enum [ "slow" "medium" "high" ];
         default = "slow";
         description = mDoc ''
           Define procesor tune level for awake fucntion
@@ -83,7 +83,7 @@ in {
       };
 
       cpuFreqGovernor = mkOption {
-        type = types.enum ["ondemand" "performance" "powersave"];
+        type = types.enum [ "ondemand" "performance" "powersave" ];
         default = "ondemand";
         description = mDoc ''
           Configure the governor used to regulate the frequency of the available CPUs. By default, the kernel configures the performance governor,
@@ -142,11 +142,11 @@ in {
 
       extraRules = [
         {
-          users = ["${cfg.runAsAdmin.user}"];
+          users = [ "${cfg.runAsAdmin.user}" ];
           commands = [
             {
               command = "${pkgs.ryzenadj}/bin/ryzenadj";
-              options = ["NOPASSWD"];
+              options = [ "NOPASSWD" ];
             }
           ];
         }
